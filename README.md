@@ -51,5 +51,43 @@ In seguito spiego le effettive modifiche introdotte per la realizzazione di ogni
   - Expression If
  
 - GRAMMATICA LIVELLO 2:
+  - La grammatica di secondo livello prevedeva l'aggiunta di If-Statement e del ciclo For.
+    - L'If statement prevede una sintassi pressoché simile a quella di un if expression, tranne per il fatto che i rami condizionali non contengono banali espressioni ma possono contenere uno o più statements.
+      
+            class IfStmtAST : public StatementAST {
+              private:
+                ExprAST* Cond;
+                RootAST* TrueExp;
+                RootAST* FalseExp;
+              public:
+                IfStmtAST(ExprAST* Cond, StatementAST* TrueExp, StatementAST* FalseExp);
+                Value *codegen(driver& drv) override;
+              };
+    - Il for viene gestito dalla classe ForStmtAST, che riceve le componenti dell'header loop e del body loop e genera il codice corrispondente
 
+            class ForStmtAST : public StatementAST {
+              private: 
+                VarBindingAST* Init;
+                ExprAST* Cond;
+                VarBindingAST* Step;
+                RootAST* Body;
+              
+              public:
+                ForStmtAST(VarBindingAST* Init, ExprAST* Cond, VarBindingAST* Step, RootAST* Body);
+                Value *codegen(driver& drv) override;
+              };
 - GRAMMATICA LIVELLO 3:
+  - Il terzo livello di grammatica aggiunge la possibilità di utilizzare gli operatori di algebra booleana (AND,OR,NOT) all'interno delle espressioni condizionali.
+    La loro implementazione non richiedeva lo sviluppo di classi oggiuntive ma è sufficiente l'aggiunta dei token delle parole chiave e delle righe per la generazione del codice nella funzione che gia gestiva gli          operatori.
+    '''
+    
+        if (Op == 'n') {
+          Value *L = LHS->codegen(drv);
+          if(!L) return nullptr;
+          else return builder->CreateNot(L,"notres");
+        }
+         case 'a':
+          return builder->CreateLogicalAnd(L,R,"andres");
+         case 'o':
+          return builder->CreateLogicalOr(L,R,"orres");
+
