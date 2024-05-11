@@ -75,7 +75,7 @@ public:
   SeqAST(RootAST* first, RootAST* continuation);
   Value *codegen(driver& drv) override;
 };
-/// ExprAST - Classe base per tutti gli Statement
+/// StatementAST - Classe base per tutti gli Statement
 class StatementAST : public RootAST {};
 
 /// ExprAST - Classe base per tutti i nodi espressione
@@ -183,19 +183,8 @@ public:
   Value *codegen(driver& drv) override;
 };
 
-
-/* VarAssignmentAST
-class VarAssignmentAST : public StatementAST {
-public:
-  const std::string Name;
-  ExprAST* Val;
-public:
-  VarAssignmentAST(const std::string Name, ExprAST* Val);
-  Value *codegen(driver& drv) override;
-  const std::string& getName() const;
-};*/
-
-/// VarBindingAST
+/// VarBindingAST - Classe che gestisce contemporaneamente sia la definizione che l'assegnazione
+/// di variabili
 class VarBindingAST : public StatementAST {
 public:
   const std::string Name;

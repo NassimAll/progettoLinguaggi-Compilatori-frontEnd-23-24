@@ -90,7 +90,7 @@
 %type <std::vector<std::string>> idseq
 %type <VarBindingAST*> binding
 %type <VarBindingAST*> assignment
-%type <std::vector<VarBindingAST*>> vardefs;
+%type <std::vector<VarBindingAST*>> vardefs
 %type <VarBindingAST*> init
 %type <GlobalVariableAST*> globalvar
 %type <std::vector<StatementAST*>> stmts
