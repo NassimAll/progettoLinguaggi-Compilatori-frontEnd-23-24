@@ -96,20 +96,29 @@ const std::string& GlobalVariableAST::getName() const {
 Value* GlobalVariableAST::codegen(driver& drv) {
     // Creare la variabile globale in LLVM IR
     GlobalVariable *gv = new GlobalVariable(*module, Type::getDoubleTy(*context), false, GlobalValue::CommonLinkage, ConstantFP::getNullValue(Type::getDoubleTy(*context)), name);
+    //stampa della variabile globale su stderr per averla nel nostro file intermedio
     gv->print(llvm::errs());
     fprintf(stderr, "\n");
-   // module->getOrInsertGlobal(name, Type::getDoubleTy(*context));
     return gv;
 }
 
 /********************  Code Block  ********************/
-
+/*
+  Sono presenti due costruttori per gestire le due possibilità della grammatica che permette di 
+  generare una serie di definizioni di variabili seguita da altri statemens, oppure direttamente
+  una sequenza di statemens
+*/
 BlockAST::BlockAST(std::vector<VarBindingAST*> Def, std::vector<StatementAST*> Stmts):
   Def(Def), Stmts(Stmts) {};
 
 BlockAST::BlockAST(std::vector<StatementAST*> Stmts):
   Stmts(Stmts) {};
 
+/*
+  Nella generazione del codice vengono prima salvate le variabili eventualmente gia presenti nello scope
+  per evitare la perdita di dati che poi verranno ripristinati alla fine del blocco e si generano le 
+  eventuali def e stmts
+*/
 Value* BlockAST::codegen(driver& drv){
   // Salvo i valori della symbol table
   std::vector<AllocaInst*> tmp;
@@ -258,11 +267,7 @@ Value* ForStmtAST::codegen(driver& drv){
   Value *StartVal = Init->codegen(drv);
   if (!StartVal)
     return nullptr;
-  
-  //drv.NamedValues[Init->getName()] = genStart;
-  
-  //Value *StartVal = builder->CreateLoad(genStart->getAllocatedType(), genStart, Init->getName().c_str());
-  
+    
   // Make the new basic block for the loop header, inserting after current block.
   Function *function = builder->GetInsertBlock()->getParent();
   BasicBlock *PreheaderBB = builder->GetInsertBlock();
@@ -287,16 +292,13 @@ Value* ForStmtAST::codegen(driver& drv){
     return nullptr;
  
   Value *genNext = Step->codegen(drv);
-  // drv.NamedValues[Init->getName()] = genStart;
-  // Value *NextVar =  builder->CreateLoad(genNext->getAllocatedType(), genNext, Step->getName().c_str());
-    
+
     // Compute the end condition.
   Value *EndCond = Cond->codegen(drv);
   if (!EndCond)
     return nullptr;
 
   // Convert condition to a bool by comparing non-equal to 0.0.
- // EndCond = builder->CreateFCmpONE(EndCond, ConstantFP::get(*context, APFloat(0.0)), "loopcond");
     
     // Create the "after loop" block and insert it.
   BasicBlock *LoopEndBB = builder->GetInsertBlock();
@@ -314,12 +316,16 @@ Value* ForStmtAST::codegen(driver& drv){
   // for expr always returns 0.0.
   //return Constant::getNullValue(Type::getDoubleTy(*context));
   return Variable;
-  }
+}
 
 /************************* If Statement Tree *************************/
 IfStmtAST::IfStmtAST(ExprAST* Cond, RootAST* TrueExp, RootAST* FalseExp):
    Cond(Cond), TrueExp(TrueExp), FalseExp(FalseExp) {};
-   
+
+/*
+  Questa classe è locicamente identica alla classe IfExprAST, tranne per il fatto che un if block 
+  non lavora sono con semplici Expression ma blocchi di codice.
+*/   
 Value* IfStmtAST::codegen(driver& drv) {
     // Viene dapprima generato il codice per valutare la condizione, che
     // memorizza il risultato (di tipo i1, dunque booleano) nel registro SSA 
@@ -464,6 +470,12 @@ const std::string& VarBindingAST::getName() const {
    return Name; 
 };
 
+/*
+  VarBindingAST gestisce contemporaneamente sia Definition che Assignment, per fare ciò effettua 
+  inizialmente un check per valutare se la variabile eseste già nello scope oppure no. E in seguito 
+  gestisce o la definizione creando l'area di memoria e allocando la variabile salvandola poi in NamedValue, 
+  oppure aggiorna la variabile già esistente con un operazione di store
+*/
 Value* VarBindingAST::codegen(driver& drv) {
   AllocaInst *A = drv.NamedValues[Name];
   if (!A) { 

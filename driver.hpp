@@ -148,7 +148,7 @@ public:
   Value *codegen(driver& drv) override;
 };
 
-/// ForExprAST - Expression class for for/in.
+/// ForStmtAST - Classe per la rappresentazione del ciclo for
 class ForStmtAST : public StatementAST {
 private: 
   VarBindingAST* Init;
@@ -161,7 +161,7 @@ public:
   Value *codegen(driver& drv) override;
 };
 
-/// IfStmtAST
+/// IfStmtAST - Classe per la definizione di un construtto if-then else
 class IfStmtAST : public StatementAST {
 private:
   ExprAST* Cond;
@@ -172,7 +172,7 @@ public:
   Value *codegen(driver& drv) override;
 };
 
-/// IfExprAST
+/// IfExprAST - Classe per la definizione di un expression if
 class IfExprAST : public ExprAST {
 private:
   ExprAST* Cond;
