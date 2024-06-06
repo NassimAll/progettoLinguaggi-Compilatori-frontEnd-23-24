@@ -133,7 +133,8 @@ idseq:
                          $$ = args; }
 | "id" idseq            { $2.insert($2.begin(),$1); $$ = $2; };
 
-%left ":";
+%left ":" "?";
+%right ")" "else";
 %left "<" ">" "==";
 %left "+" "-";
 %left "*" "/";
@@ -177,7 +178,7 @@ exp:
 | "(" exp ")"           { $$ = $2; }
 | "number"              { $$ = new NumberExprAST($1); }
 | expif                 { $$ = $1; }
-| "-" exp               { $$ = new BinaryExprAST('-',$2,new BinaryExprAST('+',$2,$2)); };
+| "-" exp               { $$ = new BinaryExprAST('-',new NumberExprAST(0.0),$2); };
 
 initexp:
   %empty                  { $$ = nullptr; } 
